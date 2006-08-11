@@ -17,4 +17,4 @@ requires:
   Params::Util: 0.17
   Text::CSV_XS: 0.23
   perl: 5.005
-version: 0.01
+version: 0.02

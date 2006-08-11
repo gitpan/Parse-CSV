@@ -39,6 +39,49 @@ DESCRIPTION
     Parse::CSV is intended to fill this gap, and provide a light-weight,
     flexible and customisable incremental parser for large CSV files.
 
+  Main Features
+    Incremental Parsing - To reduce memory load, all parsing is done
+    incrementally.
+
+    Array Mode - Parsing can be done in simple array mode, returning a
+    reference to an array if the columns are not named.
+
+    Hash Mode - Parsing can be done in hash mode, putting the data into a
+    hash and return a reference to it.
+
+    "Filter Capability" - All items returned can be pass through a custom
+    filter. This filter can either modify the data on the fly, or drop
+    records you don't need.
+
+  Writing Filters
+    A Parse::CSV filter is a subroutine reference that is passed the raw
+    record as $_, and should "return" the alternative or modified record to
+    return to the user.
+
+    The basic null filter (does not modify or drop any records thus looks
+    like the following).
+
+      sub { $_ };
+
+    A filter which reversed the order of the columns (assuming they are
+    passed as an array) might look like the following.
+
+      sub { return [ reverse @$_ ] };
+
+    To drop the record, you should return "undef" from the filter. The
+    parser will then keep pulling and parsing new records until one passes
+    the filter.
+
+      # Only keep records where foo is true
+      sub { $_->{foo} ? $_ : undef }
+
+    To signal an error, throw an exception
+
+      sub {
+          $_->{foo} =~ /bar/ or die "Assumption failed";
+          return $_;
+      }
+
 METHODS
   new
     The "new" constructor creates and initialise a new CSV parser.

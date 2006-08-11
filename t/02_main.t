@@ -8,7 +8,7 @@ BEGIN {
 	$| = 1;
 }
 
-use Test::More tests => 40;
+use Test::More tests => 49;
 use Parse::CSV;
 
 my $readfile = catfile( 't', 'data', 'simple.csv' );
@@ -98,6 +98,7 @@ SCOPE: {
 #####################################################################
 # Test filters
 
+# Basic filter usage
 SCOPE: {
 	my $csv = Parse::CSV->new(
 		file   => $readfile,
@@ -107,7 +108,6 @@ SCOPE: {
 	isa_ok( $csv, 'Parse::CSV' );
 	is( $csv->row,    1,  '->row returns 1' );
 	is( $csv->errstr, '', '->errstr returns ""' );
-
 
 	# Get the first line
 	my $fetch1 = $csv->fetch;
@@ -129,5 +129,31 @@ SCOPE: {
 	is( $csv->row,    3,  '->row returns 3' );
 	is( $csv->errstr, '', '->errstr returns ""' );
 }
+
+# Filtering out of records
+SCOPE: {
+	my $csv = Parse::CSV->new(
+		file   => $readfile,
+		fields => 'auto',
+		filter => sub { $_->{a} =~ /\d/ ? undef : $_ },
+		);
+	isa_ok( $csv, 'Parse::CSV' );
+	is( $csv->row,    1,  '->row returns 1' );
+	is( $csv->errstr, '', '->errstr returns ""' );
+
+	# Get the first line
+	my $fetch1 = $csv->fetch;
+	is_deeply( $fetch1, bless( { a => 'this', b => 'is', c => 'also', d => 'a', e => 'sample' }, 'Foo' ),
+		'->fetch returns as expected' );
+	is( $csv->row,    2,  '->row returns 2' );
+	is( $csv->errstr, '', '->errstr returns ""' );
+
+	# Get the line after the end
+	my $fetch2 = $csv->fetch;
+	is( $fetch2, undef, '->fetch returns undef' );
+	is( $csv->row,    3,  '->row returns 3' );
+	is( $csv->errstr, '', '->errstr returns ""' );
+}
+
 
 exit(0);
