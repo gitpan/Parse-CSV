@@ -9,12 +9,14 @@ SYNOPSIS
       while ( my $array_ref = $simple->fetch ) {
          # Do something...
       }
-  
-      # Parse a colon-seperated variables file  from a filehandle as a hash
+
+    ... or a more complex example...
+
+      # Parse a colon-seperated variables file  from a handle as a hash
       # based on headers from the first line.
       # Then filter, so we emit objects rather than the plain hash.
       my $objects = Parse::CSV->new(
-          filehandle => $io_handle,
+          handle => $io_handle,
           sep_char   => ';',
           fields     => 'auto',
           filter     => sub { My::Object->new( $_ ) },
@@ -29,19 +31,20 @@ DESCRIPTION
     Text::CSV_XS is the standard parser for CSV files. It is fast as hell,
     but unfortunately it can be a bit verbose to use.
 
-    A number of other modules attempt to put usability wrappers around this
-    venerable module, but they all tend to focus on parsing the entire file
-    at once.
+    A number of other modules have attempted to put usability wrappers
+    around this venerable module, but they have all focussed on parsing the
+    entire file into memory at once.
 
-    This is fine unless your CSV files start to get large. For that case,
-    you have only the heavyweight XML::SAXDriver::CSV option.
+    This method is fine unless your CSV files start to get large. Once that
+    happens, the only existing option is to fall back on the relatively slow
+    and heavyweight XML::SAXDriver::CSV module.
 
-    Parse::CSV is intended to fill this gap, and provide a light-weight,
-    flexible and customisable incremental parser for large CSV files.
+    Parse::CSV fills this functionality gap. It provides a flexible and
+    light-weight streaming parser for large, extremely large, or arbitrarily
+    large CSV files.
 
   Main Features
-    Incremental Parsing - To reduce memory load, all parsing is done
-    incrementally.
+    Stream-Based Parser - All parsing a line at a time.
 
     Array Mode - Parsing can be done in simple array mode, returning a
     reference to an array if the columns are not named.
@@ -49,7 +52,7 @@ DESCRIPTION
     Hash Mode - Parsing can be done in hash mode, putting the data into a
     hash and return a reference to it.
 
-    "Filter Capability" - All items returned can be pass through a custom
+    Filter Capability - All items returned can be passed through a custom
     filter. This filter can either modify the data on the fly, or drop
     records you don't need.
 
@@ -58,8 +61,8 @@ DESCRIPTION
     record as $_, and should "return" the alternative or modified record to
     return to the user.
 
-    The basic null filter (does not modify or drop any records thus looks
-    like the following).
+    The null filter (does not modify or drop any records) looks like the
+    following.
 
       sub { $_ };
 
@@ -167,6 +170,24 @@ METHODS
     value of "row" will be zero (unless you are using "fields =" 'auto'> in
     which case it will be 1).
 
+  combine
+      $status = $csv->combine(@columns);
+
+    The "combine" method is provided as a convenience, and is passed through
+    to the underlying Text::CSV_XS object.
+
+  string
+      $line = $cvs->string;
+
+    The "string" method is provided as a convenience, and is passed through
+    to the underlying Text::CSV_XS object.
+
+  print
+      $status = $cvs->print($io, $columns);
+
+    The "print" method is provided as a convenience, and is passed through
+    to the underlying Text::CSV_XS object.
+
   errstr
     On error, the "errstr" method returns the error that occured.
 
@@ -181,13 +202,13 @@ SUPPORT
     author.
 
 AUTHORS
-    Adam Kennedy <adamk@cpan.org<
+    Adam Kennedy <adamk@cpan.org>
 
 SEE ALSO
     Text::CSV_XS, <http://ali.as/>
 
 COPYRIGHT
-    Copyright (c) 2006 Adam Kennedy.
+    Copyright 2006 Adam Kennedy.
 
     This program is free software; you can redistribute it and/or modify it
     under the same terms as Perl itself.
