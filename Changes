@@ -1,4 +1,27 @@
-Revision history for Perl extension Parse::CSV
+Revision history for Perl extension Parse-CSV
+
+1.99 Tue 29 Nov 2011
+	- Significant refactoring of the way column names are handled
+	- Upgrade to Module::Install::DSL 1.04
+	- The 'fields' constructor param is now 'names'
+	- The 'names' param treats any true non-reference as 'auto'
+	- Added back-compatibility support for older 'fields' indefinitely
+	- Added 'names' accessor to get or set the column names on the fly
+	- POD changes
+	- Adding tests for names
+	- RT bug #31389 "fields" is a method of Text::CSV_XS
+	- RT Bug #51692
+	- RT bug #51081 Some replacements of "CVS" with "CSV"
+	- Added tests for fields and string
+
+1.02 not released
+
+1.01 not released
+
+1.01 Sat 10 May 2008
+	- Methods combine/string/print were infinite looping, fixed
+	- Big CSV_XS dependency increase, *substantial* numbers of
+	  important bugs were fixed in April 2008.
 
 1.00 Tue 17 Oct 2006
 	- Converting to _CODELIKE

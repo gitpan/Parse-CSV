@@ -1,21 +1,34 @@
-
-no_index: 
-  directory: 
+---
+abstract: 'Highly flexible CSV parser for large files'
+author:
+  - 'Adam Kennedy <adamk@cpan.org>'
+build_requires:
+  ExtUtils::MakeMaker: 6.36
+  File::Spec: 0.80
+  Test::More: 0.47
+configure_requires:
+  ExtUtils::MakeMaker: 6.36
+distribution_type: module
+dynamic_config: 0
+generated_by: 'Module::Install version 1.04'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+module_name: Parse::CSV
+name: Parse-CSV
+no_index:
+  directory:
     - inc
     - t
-generated_by: Module::Install version 0.64
-distribution_type: module
-version: 1.00
-name: Parse-CSV
-author: Adam Kennedy <adamk@cpan.org>
-license: perl
-build_requires: 
-  Test::More: 0.47
-  File::Spec: 0.80
-requires: 
+    - xt
+requires:
+  IO::File: 1.14
+  Params::Util: 0.22
+  Text::CSV_XS: 0.42
   perl: 5.005
-  Params::Util: 0.17
-  IO::File: 0
-  Text::CSV_XS: 0.23
-  Carp: 0
-abstract: Highly flexible CVS parser for large files
+resources:
+  ChangeLog: http://fisheye2.atlassian.com/changelog/cpan/trunk/Parse-CSV
+  license: http://dev.perl.org/licenses/
+  repository: http://svn.ali.as/cpan/trunk/Parse-CSV
+version: 1.99

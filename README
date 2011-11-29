@@ -1,12 +1,13 @@
 NAME
-    Parse::CSV - Highly flexible CVS parser for large files
+    Parse::CSV - Highly flexible CSV parser for large files
 
 SYNOPSIS
       # Simple headerless comma-seperated column parser
       my $simple = Parse::CSV->new(
           file => 'file.csv',
-          );
-      while ( my $array_ref = $simple->fetch ) {
+      );
+      
+  while ( my $array_ref = $simple->fetch ) {
          # Do something...
       }
 
@@ -18,12 +19,13 @@ SYNOPSIS
       my $objects = Parse::CSV->new(
           handle => $io_handle,
           sep_char   => ';',
-          fields     => 'auto',
+          names      => 1,
           filter     => sub { My::Object->new( $_ ) },
-          );
-      while ( my $object = $objects->fetch ) {
+      );
+      
+  while ( my $object = $objects->fetch ) {
           $object->do_something;
-      } 
+      }
 
 DESCRIPTION
     Surely the CPAN doesn't need yet another CSV parsing module.
@@ -110,22 +112,22 @@ METHODS
           },
       );
 
-    An optional "fields" param can be provided, which should be an array
+    An optional "names" param can be provided, which should be an array
     reference containing the names of the columns in the CSV file.
 
       $parser = Parse::CSV->new(
-          file   => 'file.csv',
-          fields => [ 'col1', 'col2', 'col3' ],
+          file  => 'file.csv',
+          names => [ 'col1', 'col2', 'col3' ],
       );
 
-    If the "fields" param is provided, the parser will map the columns to a
+    If the "names" param is provided, the parser will map the columns to a
     hash where the keys are the field names provided, and the values are the
     values found in the CSV file.
 
-    If the "fields" param is not provided, the parser will return simple
+    If the "names" param is not provided, the parser will return simple
     array references of the columns.
 
-    If the "fields" param is the string 'auto', the fields will be
+    If the "names" param is true and not a reference, the names will be
     automatically determined by reading the first line of the CSV file and
     using those values as the field names.
 
@@ -167,8 +169,8 @@ METHODS
     The "row" method returns the current row of the CSV file.
 
     This is a one-based count, so when you first create the parser, the
-    value of "row" will be zero (unless you are using "fields =" 'auto'> in
-    which case it will be 1).
+    value of "row" will be zero (unless you are using "names" on automatic
+    in which case it will be 1).
 
   combine
       $status = $csv->combine(@columns);
@@ -177,16 +179,32 @@ METHODS
     to the underlying Text::CSV_XS object.
 
   string
-      $line = $cvs->string;
+      $line = $csv->string;
 
     The "string" method is provided as a convenience, and is passed through
     to the underlying Text::CSV_XS object.
 
   print
-      $status = $cvs->print($io, $columns);
+      $status = $csv->print($io, $columns);
 
     The "print" method is provided as a convenience, and is passed through
     to the underlying Text::CSV_XS object.
+
+  fields
+      @fields = $csv->fields;
+
+    The "fields" method is provided as a convenience, and is passed through
+    to the underlying Text::CSV_XS object. It shows the actual row as an
+    array.
+
+  names
+      # Get the current column names in use
+      my @names = $csv->names;
+      
+  # Change the column names on the fly mid stream
+      $csv->names( 'fn1', 'fn2' );
+
+    The "names" method gets or sets the column name mapping for the parser.
 
   errstr
     On error, the "errstr" method returns the error that occured.
@@ -194,7 +212,7 @@ METHODS
     If the last action was NOT an error, returns the null string ''.
 
 SUPPORT
-    Bugs should be always be reported via the CPAN bug tracker at
+    Bugs should always be reported via the CPAN bug tracker at
 
     <http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Parse-CSV>
 
@@ -204,11 +222,14 @@ SUPPORT
 AUTHORS
     Adam Kennedy <adamk@cpan.org>
 
+CONTRIBUTORS
+    Uwe Sarnowski <uwes@cpan.org>
+
 SEE ALSO
     Text::CSV_XS, <http://ali.as/>
 
 COPYRIGHT
-    Copyright 2006 Adam Kennedy.
+    Copyright 2006 - 2011 Adam Kennedy.
 
     This program is free software; you can redistribute it and/or modify it
     under the same terms as Perl itself.

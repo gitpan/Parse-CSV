@@ -4,14 +4,15 @@ package Parse::CSV;
 
 =head1 NAME
 
-Parse::CSV - Highly flexible CVS parser for large files
+Parse::CSV - Highly flexible CSV parser for large files
 
 =head1 SYNOPSIS
 
   # Simple headerless comma-seperated column parser
   my $simple = Parse::CSV->new(
       file => 'file.csv',
-      );
+  );
+  
   while ( my $array_ref = $simple->fetch ) {
      # Do something...
   }
@@ -24,9 +25,10 @@ Parse::CSV - Highly flexible CVS parser for large files
   my $objects = Parse::CSV->new(
       handle => $io_handle,
       sep_char   => ';',
-      fields     => 'auto',
+      names      => 1,
       filter     => sub { My::Object->new( $_ ) },
-      );
+  );
+  
   while ( my $object = $objects->fetch ) {
       $object->do_something;
   } 
@@ -100,14 +102,14 @@ To signal an error, throw an exception
 
 use 5.005;
 use strict;
-use Carp         ();
-use IO::File     ();
-use Text::CSV_XS ();
-use Params::Util qw{ _STRING _ARRAY _HASH0 _CODELIKE _HANDLE };
+use Carp              ();
+use IO::File     1.14 ();
+use Text::CSV_XS 0.42 ();
+use Params::Util 0.22 ();
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '1.00';
+	$VERSION = '1.99';
 }
 
 
@@ -144,22 +146,22 @@ C<csv_attr> param. For example:
       },
   );
 
-An optional C<fields> param can be provided, which should be an array
+An optional C<names> param can be provided, which should be an array
 reference containing the names of the columns in the CSV file.
 
   $parser = Parse::CSV->new(
-      file   => 'file.csv',
-      fields => [ 'col1', 'col2', 'col3' ],
+      file  => 'file.csv',
+      names => [ 'col1', 'col2', 'col3' ],
   );
 
-If the C<fields> param is provided, the parser will map the columns to a
+If the C<names> param is provided, the parser will map the columns to a
 hash where the keys are the field names provided, and the values are the
 values found in the CSV file.
 
-If the C<fields> param is B<not> provided, the parser will return simple
+If the C<names> param is B<not> provided, the parser will return simple
 array references of the columns.
 
-If the C<fields> param is the string 'auto', the fields will be
+If the C<names> param is true and not a reference, the names will be
 automatically determined by reading the first line of the CSV file and
 using those values as the field names.
 
@@ -175,14 +177,15 @@ Returns a new L<Parse::CSV> object, or throws an exception (dies) on error.
 
 sub new {
 	my $class = shift;
-	my $self  = bless { @_,
+	my $self  = bless {
+		@_,
 		row    => 0,
 		errstr => '',
-		}, $class;
+	}, $class;
 
 	# Do we have a file name
 	if ( exists $self->{file} ) {
-		unless ( _STRING($self->{file}) ) {
+		unless ( Params::Util::_STRING($self->{file}) ) {
 			Carp::croak("Parse::CSV file param is not a string");
 		}
 		unless ( -f $self->{file} and -r _ ) {
@@ -196,7 +199,7 @@ sub new {
 
 	# Do we have a file handle
 	if ( exists $self->{handle} ) {
-		unless ( _HANDLE($self->{handle}) ) {
+		unless ( Params::Util::_HANDLE($self->{handle}) ) {
 			Carp::croak("Parse::CSV handle param is not an IO handle");
 		}
 	} else {
@@ -204,7 +207,7 @@ sub new {
 	}
 
 	# Seperate the Text::CSV attributes
-	unless ( _HASH0($self->{csv_attr}) ) {
+	unless ( Params::Util::_HASH0($self->{csv_attr}) ) {
 		$self->{csv_attr} = {};
 		foreach ( qw{quote_char eol escape_char sep_char binary always_quote} ) {
 			next unless exists $self->{$_};
@@ -218,8 +221,13 @@ sub new {
 		Carp::croak("Failed to create Text::CSV_XS parser");
 	}
 
-	# Handle automatic fields
-	if ( _STRING($self->{fields}) and lc($self->{fields}) eq 'auto' ) {
+	# Deprecated fields usage
+	if ( $self->{fields} and not $self->{names} ) {
+		$self->{names} = $self->{fields};
+	}
+
+	# Handle automatic field names
+	if ( Params::Util::_STRING($self->{names}) and $self->{names} ) {
 		# Grab the first line
 		my $line = $self->_getline;
 		unless ( defined $line ) {
@@ -235,17 +243,16 @@ sub new {
 		}
 
 		# Turn the array ref into a hash if needed
-		my @cols = $self->{csv_xs}->fields;
-		$self->{fields} = \@cols;
+		$self->{names} = [ $self->{csv_xs}->fields ];
 	}
 
-	# Check fields
-	if ( exists $self->{fields} and ! _ARRAY($self->{fields}) ) {
-		Carp::croak("Parse::CSV fields param is not an array reference of strings");
+	# Check names
+	if ( exists $self->{names} and ! Params::Util::_ARRAY($self->{names}) ) {
+		Carp::croak("Parse::CSV names param is not an array reference of strings");
 	}
 
 	# Check filter
-	if ( exists $self->{filter} and ! _CODELIKE($self->{filter}) ) {
+	if ( exists $self->{filter} and ! Params::Util::_CODELIKE($self->{filter}) ) {
 		Carp::croak("Parse::CSV filter param is not callable");
 	}
 
@@ -303,13 +310,13 @@ sub fetch {
 		}
 
 		# Turn the array ref into a hash if needed
-		my $rv   = undef;
-		my $f    = $self->{fields};
-		my @cols = $self->{csv_xs}->fields;
-		if ( $f ) {
+		my $rv    = undef;
+		my $names = $self->{names};
+		my @cols  = $self->{csv_xs}->fields;
+		if ( $names ) {
 			$rv = {};
-			foreach ( 0 .. $#$f ) {
-				$rv->{ $f->[$_] } = $cols[$_];
+			foreach ( 0 .. $#$names ) {
+				$rv->{ $names->[$_] } = $cols[$_];
 			}
 		} else {
 			$rv = \@cols;
@@ -363,7 +370,7 @@ The C<row> method returns the current row of the CSV file.
 
 This is a one-based count, so when you first create the parser,
 the value of C<row> will be zero (unless you are using
-C<fields => 'auto'> in which case it will be 1).
+C<names> on automatic in which case it will be 1).
 
 =cut
 
@@ -383,14 +390,14 @@ to the underlying L<Text::CSV_XS> object.
 =cut
 
 sub combine {
-	shift->combine(@_);
+	shift->{csv_xs}->combine(@_);
 }
 
 =pod
 
 =head2 string
 
-  $line = $cvs->string;
+  $line = $csv->string;
 
 The C<string> method is provided as a convenience, and is passed through
 to the underlying L<Text::CSV_XS> object.
@@ -398,14 +405,14 @@ to the underlying L<Text::CSV_XS> object.
 =cut
 
 sub string {
-	shift->string(@_);
+	shift->{csv_xs}->string(@_);
 }
 
 =pod
 
 =head2 print
 
-  $status = $cvs->print($io, $columns);
+  $status = $csv->print($io, $columns);
 
 The C<print> method is provided as a convenience, and is passed through
 to the underlying L<Text::CSV_XS> object.
@@ -413,7 +420,43 @@ to the underlying L<Text::CSV_XS> object.
 =cut
 
 sub print {
-	shift->print(@_);
+	shift->{csv_xs}->print(@_);
+}
+
+=pod
+
+=head2 fields
+
+  @fields = $csv->fields;
+
+The C<fields> method is provided as a convenience, and is passed through
+to the underlying L<Text::CSV_XS> object. It shows the actual row as an array.
+
+=cut
+
+sub fields {
+	shift->{csv_xs}->fields;
+}
+
+=pod
+
+=head2 names
+
+  # Get the current column names in use
+  my @names = $csv->names;
+  
+  # Change the column names on the fly mid stream
+  $csv->names( 'fn1', 'fn2' );
+
+The C<names> method gets or sets the column name mapping for the parser.
+
+=cut
+
+sub names {
+	my $self  = shift;
+	my $names = $self->{names};
+	@$names = @_ if @_;
+	return @$names;
 }
 
 =pod
@@ -436,7 +479,7 @@ sub errstr {
 
 =head1 SUPPORT
 
-Bugs should be always be reported via the CPAN bug tracker at
+Bugs should always be reported via the CPAN bug tracker at
 
 L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Parse-CSV>
 
@@ -446,13 +489,17 @@ For other issues, or commercial enhancement or support, contact the author.
 
 Adam Kennedy E<lt>adamk@cpan.orgE<gt>
 
+=head1 CONTRIBUTORS
+
+Uwe Sarnowski E<lt>uwes@cpan.orgE<gt>
+
 =head1 SEE ALSO
 
 L<Text::CSV_XS>, L<http://ali.as/>
 
 =head1 COPYRIGHT
 
-Copyright 2006 Adam Kennedy.
+Copyright 2006 - 2011 Adam Kennedy.
 
 This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.

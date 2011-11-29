@@ -1,15 +1,15 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 # Compile testing for Parse::CSV
 
 use strict;
-use File::Spec::Functions ':ALL';
 BEGIN {
 	$|  = 1;
 	$^W = 1;
 }
 
-use Test::More tests => 49;
+use Test::More tests => 71;
+use File::Spec::Functions ':ALL';
 use Parse::CSV;
 
 my $readfile = catfile( 't', 'data', 'simple.csv' );
@@ -25,7 +25,7 @@ ok( -f $readfile, "$readfile exists" );
 SCOPE: {
 	my $csv = Parse::CSV->new(
 		file => $readfile,
-		);
+	);
 	isa_ok( $csv, 'Parse::CSV' );
 	is( $csv->row,    0,  '->row returns 0' );
 	is( $csv->errstr, '', '->errstr returns ""' );
@@ -41,6 +41,7 @@ SCOPE: {
 	is_deeply( $fetch2, [ qw{this is also a sample} ], '->fetch returns as expected' );
 	is( $csv->row,    2,  '->row returns 2' );
 	is( $csv->errstr, '', '->errstr returns ""' );
+	
 
 	# Pull the first line
 	my $fetch3 = $csv->fetch;
@@ -64,12 +65,14 @@ SCOPE: {
 
 SCOPE: {
 	my $csv = Parse::CSV->new(
-		file   => $readfile,
-		fields => 'auto',
-		);
+		file  => $readfile,
+		names => 1,
+	);
 	isa_ok( $csv, 'Parse::CSV' );
 	is( $csv->row,    1,  '->row returns 1' );
 	is( $csv->errstr, '', '->errstr returns ""' );
+
+	is_deeply( [$csv->fields],[ qw{a b c d e} ],'->fields() before first line and after open $csv returns as expected');
 
 	# Get the first line
 	my $fetch1 = $csv->fetch;
@@ -78,12 +81,61 @@ SCOPE: {
 	is( $csv->row,    2,  '->row returns 2' );
 	is( $csv->errstr, '', '->errstr returns ""' );
 
+	my $line=$csv->string; 
+	chomp($line);  # $csv->string has linefeed
+	is( $line,"this,is,also,a,sample",'->string() works');
+	is_deeply( [$csv->fields],[ qw{this is also a sample} ],'->fields() after first line returns as expected');
+
 	# Get the second line
 	my $fetch2 = $csv->fetch;	
 	is_deeply( $fetch2, { a => 1, b => 2, c => 3, d => 4.5, e => 5 },
 		'->fetch returns as expected' );
 	is( $csv->row,    3,  '->row returns 3' );
 	is( $csv->errstr, '', '->errstr returns ""' );
+
+	is_deeply( [ $csv->names ], [ qw{a b c d e} ], '->colnames() (get) returns as expected' );
+	is_deeply( [ $csv->names(qw{aa b c d e fext}) ], [ qw{aa b c d e fext} ], '->colnames() (set) returns as expected' );
+
+	# Get the line after the end
+	my $fetch3 = $csv->fetch;
+	is( $fetch3, undef, '->fetch returns undef' );
+	is( $csv->row,    3,  '->row returns 3' );
+	is( $csv->errstr, '', '->errstr returns ""' );
+}
+
+# Ensure back-compatible with 'fields'
+SCOPE: {
+	my $csv = Parse::CSV->new(
+		file   => $readfile,
+		fields => 'auto',
+	);
+	isa_ok( $csv, 'Parse::CSV' );
+	is( $csv->row,    1,  '->row returns 1' );
+	is( $csv->errstr, '', '->errstr returns ""' );
+
+	is_deeply( [$csv->fields],[ qw{a b c d e} ],'->fields() before first line and after open $csv returns as expected');
+
+	# Get the first line
+	my $fetch1 = $csv->fetch;
+	is_deeply( $fetch1, { a => 'this', b => 'is', c => 'also', d => 'a', e => 'sample' },
+		'->fetch returns as expected' );
+	is( $csv->row,    2,  '->row returns 2' );
+	is( $csv->errstr, '', '->errstr returns ""' );
+
+	my $line=$csv->string; 
+	chomp($line);  # $csv->string has linefeed
+	is( $line,"this,is,also,a,sample",'->string() works');
+	is_deeply( [$csv->fields],[ qw{this is also a sample} ],'->fields() after first line returns as expected');
+
+	# Get the second line
+	my $fetch2 = $csv->fetch;	
+	is_deeply( $fetch2, { a => 1, b => 2, c => 3, d => 4.5, e => 5 },
+		'->fetch returns as expected' );
+	is( $csv->row,    3,  '->row returns 3' );
+	is( $csv->errstr, '', '->errstr returns ""' );
+
+	is_deeply( [ $csv->names ], [ qw{a b c d e} ], '->colnames() (get) returns as expected' );
+	is_deeply( [ $csv->names(qw{aa b c d e fext}) ], [ qw{aa b c d e fext} ], '->colnames() (set) returns as expected' );
 
 	# Get the line after the end
 	my $fetch3 = $csv->fetch;
@@ -105,7 +157,7 @@ SCOPE: {
 		file   => $readfile,
 		fields => 'auto',
 		filter => sub { bless $_, 'Foo' },
-		);
+	);
 	isa_ok( $csv, 'Parse::CSV' );
 	is( $csv->row,    1,  '->row returns 1' );
 	is( $csv->errstr, '', '->errstr returns ""' );
@@ -137,7 +189,7 @@ SCOPE: {
 		file   => $readfile,
 		fields => 'auto',
 		filter => sub { $_->{a} =~ /\d/ ? undef : $_ },
-		);
+	);
 	isa_ok( $csv, 'Parse::CSV' );
 	is( $csv->row,    1,  '->row returns 1' );
 	is( $csv->errstr, '', '->errstr returns ""' );
@@ -155,6 +207,3 @@ SCOPE: {
 	is( $csv->row,    3,  '->row returns 3' );
 	is( $csv->errstr, '', '->errstr returns ""' );
 }
-
-
-exit(0);
