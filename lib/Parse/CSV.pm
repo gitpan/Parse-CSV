@@ -41,7 +41,7 @@ L<Text::CSV_XS> is the standard parser for CSV files. It is fast as hell,
 but unfortunately it can be a bit verbose to use.
 
 A number of other modules have attempted to put usability wrappers around
-this venerable module, but they have all focussed on parsing the entire
+this venerable module, but they have all focused on parsing the entire
 file into memory at once.
 
 This method is fine unless your CSV files start to get large. Once that
@@ -103,13 +103,13 @@ To signal an error, throw an exception
 use 5.005;
 use strict;
 use Carp              ();
-use IO::File     1.14 ();
+use IO::File     1.13 ();
 use Text::CSV_XS 0.42 ();
 use Params::Util 0.22 ();
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '1.99';
+	$VERSION = '2.00';
 }
 
 
@@ -131,7 +131,7 @@ To specify the CSV data source, you should provide either the C<file>
 param, which should be the name of the file to read, or the C<handle>
 param, which should be a file handle to read instead.
 
-The actual parsing is done using L<Text::CSV_XS>. Any of it's
+The actual parsing is done using L<Text::CSV_XS>. Any of its
 constructor/parsing params can also be provided to this C<new> method,
 and they will be passed on.
 
@@ -499,7 +499,7 @@ L<Text::CSV_XS>, L<http://ali.as/>
 
 =head1 COPYRIGHT
 
-Copyright 2006 - 2011 Adam Kennedy.
+Copyright 2006 - 2012 Adam Kennedy.
 
 This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.

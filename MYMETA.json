@@ -35,7 +35,7 @@
       },
       "runtime" : {
          "requires" : {
-            "IO::File" : "1.14",
+            "IO::File" : "1.13",
             "Params::Util" : "0.22",
             "Text::CSV_XS" : "0.42",
             "perl" : "5.005"
@@ -52,6 +52,6 @@
       },
       "x_ChangeLog" : "http://fisheye2.atlassian.com/changelog/cpan/trunk/Parse-CSV"
    },
-   "version" : "1.99",
+   "version" : "2.00",
    "x_module_name" : "Parse::CSV"
 }

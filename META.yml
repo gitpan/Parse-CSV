@@ -23,7 +23,7 @@ no_index:
     - t
     - xt
 requires:
-  IO::File: 1.14
+  IO::File: 1.13
   Params::Util: 0.22
   Text::CSV_XS: 0.42
   perl: 5.005
@@ -31,4 +31,4 @@ resources:
   ChangeLog: http://fisheye2.atlassian.com/changelog/cpan/trunk/Parse-CSV
   license: http://dev.perl.org/licenses/
   repository: http://svn.ali.as/cpan/trunk/Parse-CSV
-version: 1.99
+version: 2.00

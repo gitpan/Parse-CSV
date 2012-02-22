@@ -34,7 +34,7 @@ DESCRIPTION
     but unfortunately it can be a bit verbose to use.
 
     A number of other modules have attempted to put usability wrappers
-    around this venerable module, but they have all focussed on parsing the
+    around this venerable module, but they have all focused on parsing the
     entire file into memory at once.
 
     This method is fine unless your CSV files start to get large. Once that
@@ -97,7 +97,7 @@ METHODS
     param, which should be the name of the file to read, or the "handle"
     param, which should be a file handle to read instead.
 
-    The actual parsing is done using Text::CSV_XS. Any of it's
+    The actual parsing is done using Text::CSV_XS. Any of its
     constructor/parsing params can also be provided to this "new" method,
     and they will be passed on.
 
@@ -229,7 +229,7 @@ SEE ALSO
     Text::CSV_XS, <http://ali.as/>
 
 COPYRIGHT
-    Copyright 2006 - 2011 Adam Kennedy.
+    Copyright 2006 - 2012 Adam Kennedy.
 
     This program is free software; you can redistribute it and/or modify it
     under the same terms as Perl itself.
